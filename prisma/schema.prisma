@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// role: PARENT | TEACHER | ADMIN
+model User {
+  id                 String    @id @default(cuid())
+  name               String
+  email              String    @unique
+  passwordHash       String
+  role               String    @default("PARENT")
+  subscriptionEndsAt DateTime?
+  createdAt          DateTime  @default(now())
+  sessions           Session[]
+  progress           Progress[]
+  payments           Payment[]
+  resets             PasswordReset[]
+}
+
+model Session {
+  id        String   @id // sha256 of the cookie token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model PasswordReset {
+  id        String   @id // sha256 of the emailed token
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+}
+
+model Topic {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  videos Video[]
+}
+
+model Course {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  position    Int      @default(0)
+  published   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  videos      Video[]
+}
+
+// hub: PARENTS | TEACHERS      sourceType: FILE | URL | YOUTUBE
+model Video {
+  id              String     @id @default(cuid())
+  title           String
+  description     String     @default("")
+  hub             String
+  topicId         String?
+  topic           Topic?     @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  courseId        String?
+  course          Course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  position        Int        @default(0)
+  sourceType      String
+  source          String
+  durationSeconds Int        @default(0)
+  resourceUrl     String     @default("")
+  resourceLabel   String     @default("")
+  published       Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  progress        Progress[]
+
+  @@index([hub, published])
+}
+
+model Progress {
+  userId          String
+  videoId         String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video           Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  positionSeconds Int       @default(0)
+  completed       Boolean   @default(false)
+  completedAt     DateTime?
+  updatedAt       DateTime  @updatedAt
+
+  @@id([userId, videoId])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  reference String   @unique
+  email     String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  amount    String   @default("")
+  source    String   @default("selar") // selar | manual
+  raw       String   @default("")
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String
+}

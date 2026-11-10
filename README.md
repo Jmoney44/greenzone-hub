@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Greenzone Learning Hub
 
-## Getting Started
+Video learning site for Greenzone Academy.
 
-First, run the development server:
+- **Parents Hub** – one big video library. Parents create an account, pay a yearly subscription on Selar, then watch any video in any order. Finished videos are marked as watched.
+- **Teachers Hub** – free for teachers. Training is organised into courses and modules; finishing one course unlocks the next. Teacher accounts are created by the admin.
+- **Admin panel** – upload and organise videos, manage courses, parents, teachers, payments and settings.
+
+## Run it on your computer
+
+Needs Node.js 20 or newer.
 
 ```bash
+npm install
+npm run setup
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000. Sign in as the admin with the `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env` (copy `.env.example` to `.env` first if it is missing), then change the password on the Account page.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Settings in `.env`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Name | What it is |
+|---|---|
+| `DATABASE_URL` | Where the database file lives |
+| `SELAR_WEBHOOK_KEY` | Secret that must be in the Selar webhook address. Use a long random value |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First admin account, created by `npm run seed` |
+| `SITE_URL` | Public address of the site, used in emails and shown on the Settings page |
+| `STORAGE_DIR` | Optional. Folder for uploaded video files (default `storage/videos`) |
+| `RESEND_API_KEY`, `MAIL_FROM` | Optional. Needed for "forgot password" emails. Without them the reset link is only printed in the server log |
 
-## Learn More
+## Connecting Selar
 
-To learn more about Next.js, take a look at the following resources:
+1. Admin panel → Settings: enter the yearly price and the Selar product link.
+2. On Selar, set the product's redirect link to `SITE_URL/subscribe/return`.
+3. Send Selar's payment notification to `SITE_URL/api/selar/webhook?key=SELAR_WEBHOOK_KEY`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The webhook accepts any JSON or form notice that contains the buyer's email, and gives that account 12 months. If the buyer has no account yet, the payment waits and is applied when they sign up with the same email. The admin can also grant access by hand.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Putting it online
 
-## Deploy on Vercel
+Run it on a server with a permanent disk (a VPS, Railway or Render with a volume), because the database file and uploaded videos are stored on disk:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm install
+npm run setup
+npm run build
+npm start
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Back up `prisma/dev.db` (or wherever `DATABASE_URL` points) and the video storage folder.
+
+## Where things are
+
+- `prisma/schema.prisma` – database tables
+- `src/lib/access.ts` – who may watch what, course unlocking, subscriptions
+- `src/app/api/selar/webhook` – Selar payment notice
+- `src/components/Player.tsx` – video player, resume and "watched" detection
+- `src/app/admin` – admin panel
