@@ -44,10 +44,11 @@ async function ensureAdmin() {
 
 async function main() {
   await ensureAdmin();
-  const app = require("next")({ dev: false, dir: root });
+  const port = parseInt(process.env.PORT, 10) || 3000;
+  const app = require("next")({ dev: false, dir: root, hostname: "localhost", port });
   const handle = app.getRequestHandler();
   await app.prepare();
-  http.createServer((req, res) => handle(req, res)).listen(process.env.PORT || 3000, () => {
+  http.createServer((req, res) => handle(req, res)).listen(port, () => {
     console.log("Greenzone Learning Hub is running.");
   });
 }
