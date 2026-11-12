@@ -1,7 +1,10 @@
 import { Play } from "./icons";
 import { clock, youtubeId } from "@/lib/format";
 
-const tints = ["bg-leaf", "bg-[#1e6b3c]", "bg-deep", "bg-[#2b7a4b]"];
+const tints = [
+  "bg-linear-to-br from-[#1e6b3c] to-deep", "bg-linear-to-br from-[#2b7a4b] to-leaf",
+  "bg-linear-to-br from-leaf to-[#072a16]", "bg-linear-to-br from-brand to-leaf",
+];
 
 /** Video picture: the YouTube still when there is one, otherwise a brand-coloured tile. */
 export function Thumb({
@@ -18,9 +21,9 @@ export function Thumb({
         // eslint-disable-next-line @next/next/no-img-element
         <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />
       )}
-      <span className="relative flex size-13 items-center justify-center rounded-full bg-white text-deep"><Play /></span>
+      <span className="relative flex size-13 items-center justify-center rounded-full bg-white text-deep shadow-lg transition group-hover:scale-110"><Play /></span>
       {video.durationSeconds > 0 && (
-        <span className="absolute right-2.5 bottom-2.5 rounded-md bg-deep px-2 py-1 text-xs font-bold text-white">{clock(video.durationSeconds)}</span>
+        <span className="absolute right-2.5 bottom-2.5 rounded-md bg-black/70 px-2 py-1 text-xs font-bold text-white tabular-nums">{clock(video.durationSeconds)}</span>
       )}
       {children}
     </div>

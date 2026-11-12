@@ -42,11 +42,11 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
   const watchedCount = all.filter((v) => v.progress[0]?.completed).length;
 
   return (
-    <div className="min-h-screen bg-mist">
-      <SiteHeader user={me} />
-      <main className="mx-auto flex max-w-[1180px] flex-wrap items-start gap-8 px-[5%] py-9">
-        <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-5">
-          <Link href={back} className="btn-sm self-start gap-2 rounded-full"><Back /> {teachers ? "Back to course" : "Back to library"}</Link>
+    <div className="hub">
+      <SiteHeader user={me} active={teachers ? "teachers" : "hub"} />
+      <main className="mx-auto flex max-w-[1180px] flex-wrap items-start gap-7 px-5 py-6 md:px-8 md:py-8">
+        <div className="flex min-w-0 flex-[999_1_560px] flex-col gap-4">
+          <Link href={back} className="back"><Back /> {teachers ? "Back to course" : "Back to library"}</Link>
           <Player
             key={video.id}
             videoId={video.id}
@@ -56,35 +56,38 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
             alreadyCompleted={completed}
             nextHref={nextHref}
           />
+          <div className="card flex flex-col gap-4 p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex min-w-0 flex-col gap-2">
               <span className="eyebrow text-xs">{teachers ? video.course?.title : video.topic?.name ?? "Parents Hub"}</span>
-              <h1 className="text-[clamp(26px,3vw,34px)] leading-tight font-extrabold tracking-tight text-deep">{video.title}</h1>
+              <h1 className="text-[clamp(22px,2.6vw,30px)] leading-tight font-extrabold tracking-tight text-deep">{video.title}</h1>
             </div>
             {completed ? (
-              <span className="pill gap-2 bg-brand py-2.5 pr-4 pl-2.5 text-sm text-white"><Check /> Watched</span>
+              <span className="pill gap-1.5 bg-brand py-1.5 pr-3.5 pl-2.5 text-white"><Check size={15} /> Watched</span>
             ) : (
-              <span className="pill border-[1.5px] border-edge bg-white px-4 py-2.5 text-sm text-soft">
+              <span className="pill bg-[#eef1ef] px-3.5 py-1.5 text-soft">
                 {mine && mine.positionSeconds > 0 ? "In progress" : "Not started"}
               </span>
             )}
           </div>
           {video.description && <p className="leading-relaxed whitespace-pre-line text-soft">{video.description}</p>}
           {video.resourceUrl && (
-            <div className="card flex flex-col gap-3 rounded-[18px] p-6">
-              <h2 className="text-lg font-extrabold text-deep">Resources for this video</h2>
-              <a href={video.resourceUrl} target="_blank" rel="noopener noreferrer" className="flex min-h-11 items-center gap-3 text-[15px] font-semibold text-brand">
-                <Download /> {video.resourceLabel || "Download the notes"}
+            <div className="flex flex-col gap-2 border-t border-line pt-4">
+              <h2 className="text-[13px] font-bold tracking-wider text-muted uppercase">Resources for this video</h2>
+              <a href={video.resourceUrl} target="_blank" rel="noopener noreferrer" className="btn-sm gap-2 self-start text-brand">
+                <Download size={18} /> {video.resourceLabel || "Download the notes"}
               </a>
             </div>
           )}
+          </div>
         </div>
 
-        <aside className="card flex flex-[1_1_300px] flex-col gap-2 rounded-[20px] p-5">
-          <div className="flex items-baseline justify-between gap-3 pb-1">
-            <h2 className="text-lg font-extrabold text-deep">{teachers ? "Course modules" : "More videos"}</h2>
+        <aside className="card flex flex-[1_1_300px] flex-col overflow-hidden lg:sticky lg:top-24">
+          <div className="panel-head px-5">
+            <h2 className="text-base font-extrabold text-deep">{teachers ? "Course modules" : "More videos"}</h2>
             <span className="text-[13px] font-bold text-brand">{watchedCount} of {all.length} watched</span>
           </div>
+          <div className="flex flex-col gap-1 p-2">
           {list.map((v) => {
             const done = v.progress[0]?.completed;
             return (
@@ -104,6 +107,7 @@ export default async function WatchPage({ params }: { params: Promise<{ id: stri
               </Link>
             );
           })}
+          </div>
         </aside>
       </main>
     </div>

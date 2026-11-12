@@ -18,9 +18,9 @@ export default async function SubscribePage() {
   const s = await getSettings();
   const expired = !!me.subscriptionEndsAt;
   return (
-    <div className="min-h-screen bg-mist">
+    <div className="hub">
       <SiteHeader user={me} active="hub" />
-      <main className="mx-auto flex max-w-[1040px] flex-col gap-9 px-[5%] py-14">
+      <main className="page max-w-[1040px]">
         <ol className="flex flex-wrap gap-3 text-sm font-bold">
           <li className="inline-flex items-center gap-2.5 rounded-full bg-tint py-2 pr-4 pl-2 text-deep">
             <span className="flex size-7 items-center justify-center rounded-full bg-brand text-white"><Check size={14} /></span>Account created
@@ -52,7 +52,7 @@ export default async function SubscribePage() {
               The yearly price is shown on Selar. After you pay, you are brought back to your library.
             </p>
           </div>
-          <div className="flex flex-[1_1_320px] flex-col gap-5 rounded-3xl bg-deep p-10 text-white">
+          <div className="hero flex flex-[1_1_320px] flex-col gap-5 md:p-10">
             <h2 className="text-[22px] font-extrabold">What happens next</h2>
             {next.map(([t, d], i) => (
               <div key={t} className="flex items-start gap-4">
