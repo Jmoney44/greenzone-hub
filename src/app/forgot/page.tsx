@@ -8,7 +8,7 @@ export const metadata = { title: "Forgot password" };
 export default function ForgotPage() {
   return (
     <AuthShell title="Forgot your password?" text="Enter the email you registered with and we will send you a link to choose a new one.">
-      <h2 className="text-3xl font-extrabold text-deep">Reset password</h2>
+      <h2 className="text-[28px] font-extrabold tracking-tight text-deep">Reset password</h2>
       <ActionForm action={requestReset} className="flex flex-col gap-5">
         <div className="flex flex-col gap-2">
           <label htmlFor="email" className="label">Email address</label>

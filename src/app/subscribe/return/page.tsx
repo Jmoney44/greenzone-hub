@@ -17,10 +17,10 @@ export default async function ReturnPage() {
   if (isSubscribed(fresh)) redirect("/library?welcome=1");
   const s = await getSettings();
   return (
-    <div className="min-h-screen bg-mist">
+    <div className="hub">
       <meta httpEquiv="refresh" content="6" />
       <SiteHeader user={me} active="hub" />
-      <main className="mx-auto flex max-w-xl flex-col items-center gap-5 px-[5%] py-24 text-center">
+      <main className="mx-auto flex max-w-xl flex-col items-center gap-5 px-5 py-20 text-center">
         <span aria-hidden className="size-14 animate-spin rounded-full border-4 border-tint border-t-brand" />
         <h1 className="text-3xl font-extrabold text-deep">Confirming your payment…</h1>
         <p className="leading-relaxed text-soft">

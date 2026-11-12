@@ -8,7 +8,7 @@ export default async function ResetPage({ params }: { params: Promise<{ token: s
   const { token } = await params;
   return (
     <AuthShell title="Choose a new password" text="Pick something you will remember. You will be signed in straight away.">
-      <h2 className="text-3xl font-extrabold text-deep">New password</h2>
+      <h2 className="text-[28px] font-extrabold tracking-tight text-deep">New password</h2>
       <ActionForm action={resetPassword} className="flex flex-col gap-5">
         <input type="hidden" name="token" value={token} />
         <div className="flex flex-col gap-2">

@@ -16,7 +16,7 @@ export default async function SignInPage() {
       text="Sign in to continue your videos. Your watched marks and your place in each video are saved to your account."
     >
       <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-extrabold text-deep">Sign in</h2>
+        <h2 className="text-[28px] font-extrabold tracking-tight text-deep">Sign in</h2>
         <p className="text-[15px] text-muted">
           New parent? <Link href="/signup" className="font-bold text-brand">Create an account</Link>
         </p>
