@@ -40,11 +40,10 @@ export function VideoForm({ video, topics, courses, defaultHub }: { video?: Vide
   };
 
   const uploading = !!upload && !upload.error && upload.percent < 100;
-  const tab = (on: boolean) =>
-    `inline-flex min-h-11 cursor-pointer items-center rounded-full border-[1.5px] px-4 text-sm font-bold ${on ? "border-deep bg-deep text-white" : "border-edge bg-white text-soft"}`;
+  const tab = (on: boolean) => `tab ${on ? "tab-on" : ""}`;
 
   return (
-    <ActionForm action={saveVideo} className="card flex max-w-[760px] flex-col gap-5 p-7">
+    <ActionForm action={saveVideo} className="card flex max-w-[820px] flex-col gap-6 p-6 md:p-8">
       {video && <input type="hidden" name="id" value={video.id} />}
       <input type="hidden" name="hub" value={hub} />
       <input type="hidden" name="sourceType" value={type} />
@@ -59,9 +58,9 @@ export function VideoForm({ video, topics, courses, defaultHub }: { video?: Vide
         <textarea id="description" name="description" defaultValue={video?.description} rows={4} className="field py-3" />
       </div>
 
-      <fieldset className="flex flex-col gap-2">
+      <fieldset className="flex min-w-0 flex-col gap-2">
         <legend className="label mb-2">Where does this video go?</legend>
-        <div className="flex flex-wrap gap-2">
+        <div className="tabs self-start">
           <button type="button" onClick={() => setHub("PARENTS")} className={tab(hub === "PARENTS")}>Parents Hub</button>
           <button type="button" onClick={() => setHub("TEACHERS")} className={tab(hub === "TEACHERS")}>Teachers Hub</button>
         </div>
@@ -92,9 +91,9 @@ export function VideoForm({ video, topics, courses, defaultHub }: { video?: Vide
         </div>
       )}
 
-      <fieldset className="flex flex-col gap-3">
+      <fieldset className="flex min-w-0 flex-col gap-3">
         <legend className="label mb-2">The video</legend>
-        <div className="flex flex-wrap gap-2">
+        <div className="tabs self-start">
           <button type="button" onClick={() => pick("FILE")} className={tab(type === "FILE")}>Upload a file</button>
           <button type="button" onClick={() => pick("YOUTUBE")} className={tab(type === "YOUTUBE")}>YouTube link</button>
           <button type="button" onClick={() => pick("URL")} className={tab(type === "URL")}>Video host link</button>
@@ -148,11 +147,13 @@ export function VideoForm({ video, topics, courses, defaultHub }: { video?: Vide
         Published (visible in the hub)
       </label>
 
-      {uploading ? (
-        <button type="button" disabled className="btn self-start">Wait for the upload to finish…</button>
-      ) : (
-        <Submit className="btn self-start">{video ? "Save changes" : "Add video"}</Submit>
-      )}
+      <div className="flex border-t border-line pt-6">
+        {uploading ? (
+          <button type="button" disabled className="btn">Wait for the upload to finish…</button>
+        ) : (
+          <Submit className="btn">{video ? "Save changes" : "Add video"}</Submit>
+        )}
+      </div>
     </ActionForm>
   );
 }

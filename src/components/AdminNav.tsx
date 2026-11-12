@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Book, Card, External, Film, Gear, Grid, People } from "@/components/icons";
 
@@ -23,8 +24,15 @@ const heading = "hidden px-3 pb-1 text-[11px] font-bold tracking-[0.14em] text-p
 export function AdminNav() {
   const path = usePathname();
   const isOn = (href: string) => (href === "/admin" ? path === href : path.startsWith(href));
+  // On phones the menu scrolls sideways: keep the current page in view.
+  const nav = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = nav.current;
+    const on = el?.querySelector<HTMLElement>("[aria-current]");
+    if (el && on && el.scrollWidth > el.clientWidth) el.scrollLeft = on.offsetLeft - el.offsetLeft - 16;
+  }, [path]);
   return (
-    <nav aria-label="Admin" className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
+    <nav ref={nav} aria-label="Admin" className="flex gap-1 overflow-x-auto md:flex-col md:overflow-visible">
       <span className={heading}>Manage</span>
       {manage.map(({ href, label, Icon }) => (
         <Link
