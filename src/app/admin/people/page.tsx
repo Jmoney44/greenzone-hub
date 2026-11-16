@@ -16,7 +16,7 @@ export default async function AdminPeople({ searchParams }: { searchParams: Prom
     db.user.findMany({
       where: {
         role: role || { not: "ADMIN" },
-        ...(q ? { OR: [{ name: { contains: q } }, { email: { contains: q } }] } : {}),
+        ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" as const } }, { email: { contains: q, mode: "insensitive" as const } }] } : {}),
       },
       orderBy: { createdAt: "desc" },
       take: 200,

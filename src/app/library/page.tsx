@@ -23,7 +23,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
   const mine = { userId: me.id, completed: true };
   const where = {
     ...base,
-    ...(q ? { OR: [{ title: { contains: q } }, { description: { contains: q } }] } : {}),
+    ...(q ? { OR: [{ title: { contains: q, mode: "insensitive" as const } }, { description: { contains: q, mode: "insensitive" as const } }] } : {}),
     ...(topic ? { topicId: topic } : {}),
     ...(show === "watched" ? { progress: { some: mine } } : show === "todo" ? { progress: { none: mine } } : {}),
   };

@@ -6,6 +6,7 @@ import { requestReset } from "@/app/actions/auth";
 import { getSettings } from "@/lib/settings";
 
 export const metadata = { title: "Forgot password" };
+export const dynamic = "force-dynamic"; // shows the support email from Settings, which can change
 
 const tips = ["The link works for one hour.", "No email after a few minutes? Check your spam or junk folder.", "Asking again cancels any earlier link."];
 

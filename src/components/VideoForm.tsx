@@ -22,20 +22,29 @@ export function VideoForm({ video, topics, courses, defaultHub }: { video?: Vide
     setUpload(null);
   };
 
-  const send = (file: File) => {
+  const send = async (file: File) => {
     setSource("");
     setUpload({ percent: 0, name: file.name });
+    const fail = (error: string) => setUpload({ percent: 0, name: file.name, error });
+    // 1. Ask the site for a one-time upload address.
+    let ticket: { file?: string; url?: string; type?: string; error?: string } = {};
+    try {
+      const res = await fetch("/api/admin/upload", { method: "POST", headers: { "x-filename": encodeURIComponent(file.name) } });
+      ticket = await res.json();
+    } catch {}
+    if (!ticket.file || !ticket.url) return fail(ticket.error ?? "The upload could not start. Please try again.");
+    // 2. Send the file straight to video storage.
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/admin/upload");
-    xhr.setRequestHeader("x-filename", encodeURIComponent(file.name));
-    xhr.upload.onprogress = (e) => e.lengthComputable && setUpload({ percent: Math.round((e.loaded / e.total) * 100), name: file.name });
+    xhr.open("PUT", ticket.url);
+    xhr.setRequestHeader("content-type", ticket.type ?? file.type);
+    xhr.setRequestHeader("cache-control", "max-age=3600");
+    xhr.upload.onprogress = (e) => e.lengthComputable && setUpload({ percent: Math.min(99, Math.round((e.loaded / e.total) * 100)), name: file.name });
     xhr.onload = () => {
-      let reply: { file?: string; error?: string } = {};
-      try { reply = JSON.parse(xhr.responseText); } catch {}
-      if (xhr.status === 200 && reply.file) { setSource(reply.file); setUpload({ percent: 100, name: file.name }); }
-      else setUpload({ percent: 0, name: file.name, error: reply.error ?? "The upload failed. Please try again." });
+      if (xhr.status >= 200 && xhr.status < 300) { setSource(ticket.file!); setUpload({ percent: 100, name: file.name }); }
+      else if (xhr.status === 413 || /maximum allowed size|too large/i.test(xhr.responseText)) fail("This file is larger than your video storage allows. Make the file smaller, raise the limit in Supabase, or use a YouTube link instead.");
+      else fail("The upload failed. Please try again.");
     };
-    xhr.onerror = () => setUpload({ percent: 0, name: file.name, error: "The upload failed. Please check your connection and try again." });
+    xhr.onerror = () => fail("The upload failed. Please check your connection and try again.");
     xhr.send(file);
   };
 
