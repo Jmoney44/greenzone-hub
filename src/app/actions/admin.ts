@@ -1,7 +1,5 @@
 "use server";
 
-import { unlink } from "fs/promises";
-import path from "path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -9,11 +7,10 @@ import { hashPassword, requireAdmin } from "@/lib/auth";
 import { grantYear } from "@/lib/access";
 import { youtubeId } from "@/lib/format";
 import { DEFAULTS } from "@/lib/settings";
-import { STORAGE } from "@/lib/storage";
+import { removeFile } from "@/lib/storage";
 import type { FormState } from "./auth";
 
 const clean = (v: FormDataEntryValue | null) => String(v ?? "").trim();
-const removeFile = (name: string) => unlink(path.join(STORAGE, path.basename(name))).catch(() => {});
 
 // ---------- Videos ----------
 

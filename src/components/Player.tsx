@@ -118,7 +118,7 @@ export function Player({ videoId, kind, src, startAt, alreadyCompleted, nextHref
   };
 
   return (
-    <div className="relative aspect-video overflow-hidden rounded-[20px] bg-deep">
+    <div className="relative aspect-video overflow-hidden bg-black">
       {kind === "native" ? (
         <video
           ref={videoRef}
@@ -139,24 +139,24 @@ export function Player({ videoId, kind, src, startAt, alreadyCompleted, nextHref
       )}
 
       {state !== "watching" && (
-        <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-deep/95 p-6 text-center text-white">
+        <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-linear-to-br from-leaf/95 to-[#072a16]/98 p-5 text-center text-white sm:gap-4">
           {state === "done" ? (
             <>
-              <span className="flex size-20 items-center justify-center rounded-full bg-sun text-deep"><Check size={40} /></span>
-              <p className="text-2xl font-extrabold">Video completed</p>
-              <p className="text-[15px] text-pale">Marked as watched in your hub</p>
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-sun text-deep shadow-lg sm:size-20"><Check size={26} /></span>
+              <p className="text-xl font-extrabold sm:text-2xl">Video completed</p>
+              <p className="hidden text-[15px] text-pale sm:block">Marked as watched in your hub</p>
             </>
           ) : (
             <>
-              <p className="text-2xl font-extrabold">Not marked as watched yet</p>
-              <p className="max-w-sm text-[15px] text-pale">It looks like parts of this video were skipped. Watch it through to get your tick.</p>
+              <p className="text-xl font-extrabold sm:text-2xl">Not marked as watched yet</p>
+              <p className="max-w-sm text-[13px] leading-snug text-pale sm:text-[15px]">It looks like parts of this video were skipped. Watch it through to get your tick.</p>
             </>
           )}
           <div className="flex flex-wrap justify-center gap-3">
             {state === "done" && nextHref && (
-              <Link href={nextHref} className="btn bg-sun text-deep hover:bg-white">Next video <Arrow size={16} /></Link>
+              <Link href={nextHref} className="btn min-h-11 bg-sun text-deep hover:bg-white sm:min-h-12">Next video <Arrow size={16} /></Link>
             )}
-            <button type="button" onClick={again} className="inline-flex min-h-12 cursor-pointer items-center rounded-full border-[1.5px] border-white px-5 font-bold">
+            <button type="button" onClick={again} className="inline-flex min-h-11 cursor-pointer items-center rounded-full border-[1.5px] border-white/50 sm:min-h-12 px-5 font-bold hover:bg-white/10">
               Watch again
             </button>
           </div>

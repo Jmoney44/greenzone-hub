@@ -16,7 +16,7 @@ export default async function SignUpPage() {
       text="Create your account first. On the next step you subscribe for the year and the whole library opens."
     >
       <div className="flex flex-col gap-2">
-        <h2 className="text-3xl font-extrabold text-deep">Create your account</h2>
+        <h2 className="text-[28px] font-extrabold tracking-tight text-deep">Create your account</h2>
         <p className="text-[15px] text-muted">
           Already registered? <Link href="/signin" className="font-bold text-brand">Sign in</Link>
         </p>

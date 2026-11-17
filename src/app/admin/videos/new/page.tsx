@@ -1,6 +1,5 @@
-import Link from "next/link";
 import { VideoForm } from "@/components/VideoForm";
-import { Back } from "@/components/icons";
+import { PageHeader } from "@/components/AdminUI";
 import { db } from "@/lib/db";
 
 export default async function NewVideo({ searchParams }: { searchParams: Promise<{ hub?: string }> }) {
@@ -11,8 +10,7 @@ export default async function NewVideo({ searchParams }: { searchParams: Promise
   ]);
   return (
     <>
-      <Link href="/admin/videos" className="btn-sm self-start gap-2 rounded-full"><Back /> All videos</Link>
-      <h1 className="text-3xl font-extrabold tracking-tight text-deep">Add a video</h1>
+      <PageHeader title="Add a video" back={{ href: "/admin/videos", label: "All videos" }} />
       <VideoForm topics={topics} courses={courses.map((c) => ({ id: c.id, name: c.title }))} defaultHub={hub === "TEACHERS" ? "TEACHERS" : "PARENTS"} />
     </>
   );

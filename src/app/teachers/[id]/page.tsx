@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
-import { Back, Check, Play } from "@/components/icons";
+import { Arrow, Back, Check, Play } from "@/components/icons";
 import { requireRole } from "@/lib/auth";
 import { teacherCourses } from "@/lib/access";
 import { clock } from "@/lib/format";
@@ -16,46 +16,64 @@ export default async function CoursePage({ params }: { params: Promise<{ id: str
   if (!course) notFound();
   if (course.locked && me.role !== "ADMIN") redirect("/teachers");
   const upNext = courses[course.index + 1];
+  const percent = course.total ? Math.round((course.done / course.total) * 100) : 0;
   return (
-    <div className="min-h-screen bg-mist">
-      <SiteHeader user={me} active="hub" />
-      <main className="mx-auto flex max-w-[900px] flex-col gap-7 px-[5%] py-11">
-        <Link href="/teachers" className="btn-sm self-start gap-2 rounded-full"><Back /> All courses</Link>
-        <div className="flex flex-col gap-3">
-          <span className="eyebrow">Course {course.index + 1}</span>
-          <h1 className="text-[clamp(28px,3.2vw,38px)] leading-tight font-extrabold tracking-tight text-deep">{course.title}</h1>
-          {course.description && <p className="leading-relaxed text-soft">{course.description}</p>}
-        </div>
+    <div className="hub">
+      <SiteHeader user={me} active="teachers" />
+      <main className="page max-w-[900px] gap-6">
+        <Link href="/teachers" className="back"><Back /> All courses</Link>
+        <section className="hero flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <span className="text-[13px] font-bold tracking-widest text-sun uppercase">Course {course.index + 1}</span>
+            <h1 className="text-[clamp(26px,3vw,36px)] leading-tight font-extrabold tracking-tight">{course.title}</h1>
+            {course.description && <p className="leading-relaxed text-pale">{course.description}</p>}
+          </div>
+          <div className="flex flex-col gap-2.5">
+            <div className="flex flex-wrap justify-between gap-x-3 text-[15px] font-semibold text-[#e4f0e8]">
+              <span>Your progress</span><span>{course.done} of {course.total} modules · {percent}%</span>
+            </div>
+            <div role="img" aria-label={`${course.done} of ${course.total} modules completed`} className="h-2.5 rounded-full bg-white/15">
+              <div className="h-2.5 rounded-full bg-sun" style={{ width: `${percent}%` }} />
+            </div>
+          </div>
+        </section>
         {course.finished && (
-          <div role="status" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-deep px-6 py-5 text-white">
-            <span className="flex items-center gap-3 font-bold"><Check className="text-sun" /> Course completed</span>
-            {upNext && <Link href={`/teachers/${upNext.id}`} className="btn min-h-11 bg-sun text-deep hover:bg-white">Start {upNext.title}</Link>}
+          <div role="status" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-tint px-6 py-4 text-deep">
+            <span className="flex items-center gap-3 font-bold"><Check className="text-brand" /> Course completed</span>
+            {upNext && <Link href={`/teachers/${upNext.id}`} className="btn min-h-11 px-5 text-sm">Start {upNext.title} <Arrow size={16} /></Link>}
           </div>
         )}
-        <section className="card flex flex-col gap-3 rounded-[22px] p-7">
-          <div className="flex flex-wrap items-baseline justify-between gap-3">
-            <h2 className="text-[22px] font-extrabold text-deep">Modules</h2>
+        <section className="card overflow-hidden">
+          <div className="panel-head">
+            <h2 className="text-lg font-extrabold text-deep">Modules</h2>
             <span className="text-sm font-bold text-brand">{course.done} of {course.total} completed</span>
           </div>
-          {course.videos.length === 0 && <p className="text-soft">Modules for this course are being prepared.</p>}
-          {course.videos.map((v, i) => {
-            const done = v.progress[0]?.completed;
-            const started = (v.progress[0]?.positionSeconds ?? 0) > 0;
-            return (
-              <Link key={v.id} href={`/watch/${v.id}`} className="flex min-h-16 items-center gap-4 rounded-2xl bg-mist px-4 py-2 hover:bg-tint">
-                {done ? (
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-brand text-white"><Check size={16} /></span>
-                ) : (
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full border-2 border-edge bg-white text-deep"><Play size={12} /></span>
-                )}
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="font-bold">Module {i + 1}: {v.title}</span>
-                  <span className="text-[13px] text-muted">{done ? "Completed" : started ? "In progress" : "Not started"}</span>
-                </span>
-                {v.durationSeconds > 0 && <span className="text-[13px] font-semibold text-soft">{clock(v.durationSeconds)}</span>}
-              </Link>
-            );
-          })}
+          {course.videos.length === 0 && <p className="px-6 py-8 text-soft">Modules for this course are being prepared.</p>}
+          <ul className="flex flex-col divide-y divide-[#eef4f0]">
+            {course.videos.map((v, i) => {
+              const done = v.progress[0]?.completed;
+              const started = (v.progress[0]?.positionSeconds ?? 0) > 0;
+              return (
+                <li key={v.id}>
+                  <Link href={`/watch/${v.id}`} className="group flex min-h-18 items-center gap-4 px-6 py-3 hover:bg-[#f7faf8]">
+                    {done ? (
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand text-white"><Check size={18} /></span>
+                    ) : (
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-tint text-deep transition group-hover:bg-brand group-hover:text-white"><Play size={16} /></span>
+                    )}
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span className="text-[12px] font-bold tracking-wider text-muted uppercase">Module {i + 1}</span>
+                      <span className="font-bold text-ink">{v.title}</span>
+                    </span>
+                    <span className="flex shrink-0 flex-col items-end gap-0.5 text-[13px]">
+                      <span className={`font-bold ${done ? "text-brand" : "text-soft"}`}>{done ? "Completed" : started ? "In progress" : "Not started"}</span>
+                      {v.durationSeconds > 0 && <span className="text-muted tabular-nums">{clock(v.durationSeconds)}</span>}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       </main>
     </div>
