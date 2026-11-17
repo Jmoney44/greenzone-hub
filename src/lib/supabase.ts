@@ -7,11 +7,13 @@ declare global {
 }
 
 // Settings come from /config.js on the server (editable without a rebuild), or from VITE_ variables when building.
+// A value still holding the example text from config.js counts as not filled in.
+const filled = (v: unknown) => (typeof v === "string" && v.trim() && !/YOUR-PROJECT|YOUR-PUBLIC/.test(v) ? v.trim() : "");
 const cfg = window.GREENZONE_CONFIG ?? {};
-export const SUPABASE_URL = String(cfg.supabaseUrl || import.meta.env.VITE_SUPABASE_URL || "").replace(/\/+$/, "");
-const KEY = String(cfg.supabaseAnonKey || import.meta.env.VITE_SUPABASE_ANON_KEY || "");
+export const SUPABASE_URL = (filled(cfg.supabaseUrl) || filled(import.meta.env.VITE_SUPABASE_URL)).replace(/\/+$/, "");
+const KEY = filled(cfg.supabaseAnonKey) || filled(import.meta.env.VITE_SUPABASE_ANON_KEY);
 
-export const isConfigured = /^https?:\/\//.test(SUPABASE_URL) && !SUPABASE_URL.includes("YOUR-PROJECT") && !!KEY && !KEY.includes("YOUR-PUBLIC");
+export const isConfigured = /^https?:\/\//.test(SUPABASE_URL) && !!KEY;
 
 export const supabase = createClient(isConfigured ? SUPABASE_URL : "http://localhost", isConfigured ? KEY : "missing", {
   auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true, flowType: "implicit" },
