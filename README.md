@@ -2,61 +2,54 @@
 
 Video learning site for Greenzone Academy.
 
-- **Parents Hub** – one big video library. Parents create an account, pay a yearly subscription on Selar, then watch any video in any order. Finished videos are marked as watched.
-- **Teachers Hub** – free for teachers. Training is organised into courses and modules; finishing one course unlocks the next. Teacher accounts are created by the admin.
-- **Admin panel** – upload and organise videos, manage courses, parents, teachers, payments and settings.
+- **Parents Hub**: one video library. Parents create an account, pay a yearly subscription on Selar, then watch any video in any order. Finished videos are marked as watched.
+- **Teachers Hub**: free for teachers. Training is organised into courses and modules; finishing one course unlocks the next.
+- **Admin panel**: upload and organise videos, manage courses, parents, teachers, payments and settings.
 
-## Run it on your computer
+## How it is built
 
-Needs Node.js 20 or newer and a Supabase project (the database and the uploaded videos live there).
+A plain website (React + Vite), like the attendance site. It is built into ordinary files that go in `public_html` on any shared hosting, so no Node.js app runs on the server. Sign-in, the database and the video files are in **Supabase**. Database rules decide who may see what, so the public key in `config.js` cannot be used to read anything it should not.
+
+| Folder | What it is |
+|---|---|
+| `src/` | The website |
+| `supabase/setup.sql` | Creates the tables, the security rules and the private `videos` storage bucket |
+| `supabase/functions/selar-webhook/` | Receives Selar's payment notice and opens the library for 12 months |
+| `public/config.js` | Supabase address and public key, edited on the server |
+
+## Setting it up
+
+### 1. Supabase
+1. Create a project at supabase.com.
+2. Open `supabase/setup.sql`, put your email on the line `admin_email text := '...'` near the end, paste the whole file into **SQL Editor** and click **Run**.
+3. **Authentication > Sign In / Providers > Email**: turn **Confirm email** off, so parents can sign in straight after signing up. (Supabase's built-in email service only sends to your own team.)
+4. **Authentication > URL Configuration**: set **Site URL** to `https://greenzonelearninghub.com` and add `https://greenzonelearninghub.com/**` under **Redirect URLs**.
+5. Optional, for "forgot password" emails: **Authentication > Emails > SMTP Settings**. You can use an email account from cPanel (host `mail.greenzonelearninghub.com`, port 465). Without it the admin can still set a new password for anyone on the Parents and teachers page.
+
+### 2. Selar payments
+1. **Edge Functions > Deploy a new function > Via editor**. Name it `selar-webhook`, paste `supabase/functions/selar-webhook/index.ts`, and click **Deploy**.
+2. In the function's settings turn **Verify JWT** off (Selar does not send one).
+3. **Edge Functions > Secrets**: add `SELAR_WEBHOOK_KEY` with any long random text.
+4. On Selar, set the redirect link to `https://greenzonelearninghub.com/subscribe/return` and the webhook to the address shown in the admin panel under Settings.
+
+### 3. Upload the site
+1. Build it with `npm install` then `npm run package`. This makes `greenzone-hub-upload.zip`.
+2. In cPanel **File Manager**, open the domain's folder (`public_html`, or the `greenzonelearninghub.com` folder), upload the zip and **Extract** it there.
+3. Edit `config.js` in that folder: paste the **Project URL** and the public **anon** (or publishable) key from Supabase > Project Settings > API. Never put the secret / service_role key there.
+4. Open the site, click **Sign up** with the administrator email from step 1, and you land in the admin panel.
+
+### Video files
+Uploaded videos go straight from the admin's browser to the private Supabase bucket and are played through links that expire after six hours, only for people allowed to watch them. Supabase's free plan accepts files up to 50 MB each and 1 GB in total; for longer videos use an unlisted YouTube link or upgrade Supabase.
+
+### Teachers
+In the admin panel, **Parents and teachers > Add a teacher**: enter their name and email, then ask them to sign up with that email. Their account opens the Teachers Hub, free.
+
+## Working on the code
 
 ```bash
-cp .env.example .env   # then fill in the Supabase values
+cp .env.example .env   # fill in the Supabase URL and public key
 npm install
-npm run setup
 npm run dev
 ```
 
-Open http://localhost:3000. Sign in as the admin with the `ADMIN_EMAIL` and `ADMIN_PASSWORD` from `.env`, then change the password on the Account page.
-
-## Settings
-
-| Name | What it is |
-|---|---|
-| `DATABASE_URL` | Supabase pooled connection (port 6543, ends with `?pgbouncer=true&connection_limit=1`). Used by the running site |
-| `DIRECT_URL` | Supabase session pooler connection (port 5432). Used to create and update the tables |
-| `SUPABASE_URL` | Project URL, like `https://abcd.supabase.co` |
-| `SUPABASE_SERVICE_KEY` | Secret (service role) key. Lets the site upload, play and delete video files. Keep it private |
-| `SUPABASE_BUCKET` | Optional. Storage bucket for video files (default `videos`, created automatically) |
-| `SELAR_WEBHOOK_KEY` | Secret that must be in the Selar webhook address. Use a long random value |
-| `ADMIN_EMAIL`, `ADMIN_PASSWORD` | First admin account. Created on the first deploy; the password is never overwritten afterwards |
-| `SITE_URL` | Public address of the site, used in emails and shown on the Settings page |
-| `RESEND_API_KEY`, `MAIL_FROM` | Optional. Needed for "forgot password" emails. Without them the reset link is only printed in the server log |
-
-## Connecting Selar
-
-1. Admin panel → Settings: enter the yearly price and the Selar product link.
-2. On Selar, set the product's redirect link to `SITE_URL/subscribe/return`.
-3. Send Selar's payment notification to `SITE_URL/api/selar/webhook?key=SELAR_WEBHOOK_KEY`.
-
-The webhook accepts any JSON or form notice that contains the buyer's email, and gives that account 12 months. If the buyer has no account yet, the payment waits and is applied when they sign up with the same email. The admin can also grant access by hand.
-
-## Putting it online
-
-The site runs on Vercel, with the database and video files in Supabase.
-
-1. Create a Supabase project and copy the two connection strings (Connect > ORMs) and the project URL and secret key (Project Settings > API).
-2. Import this repository in Vercel and add the settings from the table above as Environment Variables.
-3. Deploy. Each deploy creates or updates the tables, makes sure the admin account exists, then builds the site (`npm run build:vercel`).
-4. Add your domain in Vercel (Project > Settings > Domains) and point it there from your registrar.
-
-Video files are uploaded from the browser straight to a private Supabase bucket, and are only played through short-lived links after the site has checked the viewer may watch. The largest file you can upload is set by your Supabase plan.
-
-## Where things are
-
-- `prisma/schema.prisma` – database tables
-- `src/lib/access.ts` – who may watch what, course unlocking, subscriptions
-- `src/app/api/selar/webhook` – Selar payment notice
-- `src/lib/storage.ts` – video files in Supabase Storage
-- `src/components/Player.tsx` – video player, resume and "watched" detection
-- `src/app/admin` – admin panel
+`npm run build` checks the types and builds `dist/`. `npm run package` also zips it for upload.

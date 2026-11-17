@@ -1,60 +1,35 @@
-import { db } from "./db";
-import { isSubscribed, type Me } from "./auth";
+import { COURSE_COLS, VIDEO_COLS, myProgress, toCourse, toVideo } from "./api";
+import { must, supabase } from "./supabase";
 
 export type CourseView = Awaited<ReturnType<typeof teacherCourses>>[number];
 
-/** Published courses in order, with this teacher's progress. A course is locked until every course before it is finished. */
+const byOrder = (a: { position: number; createdAt: Date; id: string }, b: { position: number; createdAt: Date; id: string }) =>
+  a.position - b.position || a.createdAt.getTime() - b.createdAt.getTime() || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
+/**
+ * Published courses in order, with this teacher's progress. A course is locked until every course before it is finished.
+ * (The database applies the same rule before it hands out any video, so this is only for display.)
+ */
 export async function teacherCourses(userId: string) {
-  const courses = await db.course.findMany({
-    where: { published: true },
-    orderBy: [{ position: "asc" }, { createdAt: "asc" }],
-    include: {
-      videos: {
-        where: { published: true, hub: "TEACHERS" },
-        orderBy: [{ position: "asc" }, { createdAt: "asc" }],
-        include: { progress: { where: { userId } } },
-      },
-    },
-  });
+  const [courses, videos, progress] = await Promise.all([
+    supabase.from("courses").select(COURSE_COLS).eq("published", true).then(must).then((r) => r.map(toCourse)),
+    supabase.from("videos").select(VIDEO_COLS).eq("hub", "TEACHERS").eq("published", true).not("course_id", "is", null).then(must).then((r) => r.map(toVideo)),
+    myProgress(userId),
+  ]);
+  courses.sort(byOrder);
   let previousDone = true;
   return courses.map((c, index) => {
-    const total = c.videos.length;
-    const done = c.videos.filter((v) => v.progress[0]?.completed).length;
+    const list = videos
+      .filter((v) => v.courseId === c.id)
+      .sort(byOrder)
+      .map((v) => ({ ...v, progress: progress.filter((p) => p.videoId === v.id) }));
+    const total = list.length;
+    const done = list.filter((v) => v.progress[0]?.completed).length;
     const locked = !previousDone;
     // An empty course never blocks the ones after it.
     if (total > 0 && done < total) previousDone = false;
-    return { ...c, index, total, done, locked, finished: total > 0 && done === total };
+    return { ...c, videos: list, index, total, done, locked, finished: total > 0 && done === total };
   });
 }
 
-/** Can this person play this video? */
-export async function canWatch(user: Me, video: { hub: string; published: boolean; courseId: string | null }) {
-  if (user.role === "ADMIN") return true;
-  if (!video.published) return false;
-  if (user.role === "PARENT") return video.hub === "PARENTS" && isSubscribed(user);
-  if (user.role === "TEACHER") {
-    if (video.hub !== "TEACHERS" || !video.courseId) return false;
-    const course = (await teacherCourses(user.id)).find((c) => c.id === video.courseId);
-    return !!course && !course.locked;
-  }
-  return false;
-}
-
-/** Adds a year of access. Renewing early adds to the time left. */
-export async function grantYear(userId: string) {
-  const u = await db.user.findUniqueOrThrow({ where: { id: userId } });
-  const from = u.subscriptionEndsAt && u.subscriptionEndsAt > new Date() ? u.subscriptionEndsAt : new Date();
-  const ends = new Date(from);
-  ends.setFullYear(ends.getFullYear() + 1);
-  await db.user.update({ where: { id: userId }, data: { subscriptionEndsAt: ends } });
-  return ends;
-}
-
-/** Payments that arrived before the buyer had an account are applied when they sign up with the same email. */
-export async function claimPayments(userId: string, email: string) {
-  const waiting = await db.payment.findMany({ where: { email, userId: null } });
-  for (const p of waiting) {
-    await db.payment.update({ where: { id: p.id }, data: { userId } });
-    await grantYear(userId);
-  }
-}
+export { byOrder };

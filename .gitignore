@@ -13,9 +13,6 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
 
 # production
 /build
@@ -43,3 +40,7 @@ next-env.d.ts
 # local data
 !.env.example
 /dist
+
+# built site
+/dist
+/greenzone-hub-upload.zip

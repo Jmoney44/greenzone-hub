@@ -1,9 +1,8 @@
-"use client";
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import Link from "@/components/Link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Arrow, Check } from "./icons";
+import { saveProgress } from "@/lib/supabase";
 
 type Props = {
   videoId: string;
@@ -12,6 +11,8 @@ type Props = {
   startAt: number;
   alreadyCompleted: boolean;
   nextHref: string | null;
+  /** Called once the video has been marked as watched, so the page can refresh its ticks. */
+  onCompleted?: () => void;
 };
 
 type YTPlayer = { getCurrentTime(): number; getDuration(): number; seekTo(s: number, a: boolean): void; playVideo(): void; destroy(): void };
@@ -25,8 +26,7 @@ declare global {
 /** Share of the video that must really be played before it counts as watched. */
 const REQUIRED = 0.8;
 
-export function Player({ videoId, kind, src, startAt, alreadyCompleted, nextHref }: Props) {
-  const router = useRouter();
+export function Player({ videoId, kind, src, startAt, alreadyCompleted, nextHref, onCompleted }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const ytHost = useRef<HTMLDivElement>(null);
   const yt = useRef<YTPlayer | null>(null);
@@ -40,14 +40,9 @@ export function Player({ videoId, kind, src, startAt, alreadyCompleted, nextHref
   }, [kind]);
 
   const save = useCallback(
-    (completed = false) => {
+    (completed = false, closing = false) => {
       const { t, d } = now();
-      return fetch("/api/progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ videoId, position: completed ? 0 : t, duration: d, completed }),
-        keepalive: true,
-      }).catch(() => {});
+      return saveProgress(videoId, completed ? 0 : t, d, completed, closing);
     },
     [now, videoId],
   );
@@ -58,11 +53,11 @@ export function Player({ videoId, kind, src, startAt, alreadyCompleted, nextHref
     if (alreadyCompleted || d === 0 || watched.current >= d * REQUIRED) {
       await save(true);
       setState("done");
-      router.refresh();
+      onCompleted?.();
     } else {
       setState("skipped");
     }
-  }, [alreadyCompleted, now, router, save]);
+  }, [alreadyCompleted, now, onCompleted, save]);
 
   // Count seconds actually played, and save the position every 10 seconds.
   useEffect(() => {
@@ -72,7 +67,7 @@ export function Player({ videoId, kind, src, startAt, alreadyCompleted, nextHref
       watched.current += 1;
       if (++ticks % 10 === 0) save();
     }, 1000);
-    const leave = () => { if (playing.current) save(); };
+    const leave = () => { if (playing.current) save(false, true); };
     window.addEventListener("pagehide", leave);
     return () => { clearInterval(timer); window.removeEventListener("pagehide", leave); };
   }, [save]);

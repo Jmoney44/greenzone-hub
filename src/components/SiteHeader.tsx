@@ -1,12 +1,19 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Logo } from "./Logo";
 import { SignOut } from "./icons";
-import { signOut } from "@/app/actions/auth";
-import { homeFor, type Me } from "@/lib/auth";
+import { useNavigate } from "react-router";
+import { homeFor, useAuth } from "@/lib/auth";
+import type { Me } from "@/lib/types";
 import { initials } from "@/lib/format";
 
 /** Top bar for signed-in pages. Each person only sees the links for their own hub. */
 export function SiteHeader({ user, active }: { user: Me; active?: "hub" | "teachers" | "account" | "admin" }) {
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+  const leave = async () => {
+    await signOut();
+    navigate("/");
+  };
   const admin = user.role === "ADMIN";
   const links: [string, string, boolean][] = admin
     ? [["/admin", "Admin panel", active === "admin"], ["/library", "Parents Hub", active === "hub"], ["/teachers", "Teachers Hub", active === "teachers"]]
@@ -33,7 +40,7 @@ export function SiteHeader({ user, active }: { user: Me; active?: "hub" | "teach
             <span aria-hidden className="flex size-10 items-center justify-center rounded-full bg-deep text-sm font-extrabold text-white">{initials(user.name)}</span>
             <span className="hidden max-w-40 truncate text-sm font-bold text-ink sm:block">{user.name}</span>
           </Link>
-          <form action={signOut}>
+          <form action={leave}>
             <button className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border-[1.5px] border-edge px-3 text-sm font-bold text-deep hover:bg-mist">
               <SignOut /> <span className="hidden sm:inline">Sign out</span><span className="sr-only sm:hidden">Sign out</span>
             </button>

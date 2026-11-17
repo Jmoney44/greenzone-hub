@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/Link";
 import { Back } from "@/components/icons";
 
 /** Title block shared by every admin page. */
