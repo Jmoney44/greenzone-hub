@@ -2,7 +2,25 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const db = new PrismaClient();
+// Same clean-up of DATABASE_URL as src/lib/db.ts, so a pasted quote or doubled "?" does not stop the deploy.
+function databaseUrl(raw = process.env.DATABASE_URL ?? "") {
+  const value = raw.trim().replace(/^["']+|["']+$/g, "").trim();
+  if (!value) return undefined;
+  const [base, ...rest] = value.split("?");
+  const params = new URLSearchParams(rest.join("&"));
+  try {
+    if (new URL(base).port === "6543") {
+      params.set("pgbouncer", "true");
+      if (!params.has("connection_limit")) params.set("connection_limit", "1");
+    }
+  } catch {
+    return value;
+  }
+  const query = params.toString();
+  return query ? `${base}?${query}` : base;
+}
+const url = databaseUrl();
+const db = new PrismaClient(url ? { datasourceUrl: url } : undefined);
 const email = (process.env.ADMIN_EMAIL ?? "").toLowerCase();
 const password = process.env.ADMIN_PASSWORD ?? "";
 if (!email || password.length < 8) {
