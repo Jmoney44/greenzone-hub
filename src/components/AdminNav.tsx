@@ -1,8 +1,7 @@
-"use client";
 
-import Link from "next/link";
+import Link from "@/components/Link";
 import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
+import { useLocation } from "react-router";
 import { Book, Card, External, Film, Gear, Grid, People } from "@/components/icons";
 
 const manage = [
@@ -22,7 +21,7 @@ const item = "flex min-h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm 
 const heading = "hidden px-3 pb-1 text-[11px] font-bold tracking-[0.14em] text-pale/70 uppercase md:block";
 
 export function AdminNav() {
-  const path = usePathname();
+  const path = useLocation().pathname;
   const isOn = (href: string) => (href === "/admin" ? path === href : path.startsWith(href));
   // On phones the menu scrolls sideways: keep the current page in view.
   const nav = useRef<HTMLElement>(null);

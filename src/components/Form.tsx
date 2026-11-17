@@ -1,10 +1,9 @@
-"use client";
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import type { FormState } from "@/app/actions/auth";
+import type { FormState } from "@/lib/form";
 
-/** A form wired to a server action that shows its error or success message. */
+/** A form wired to an action that shows its error or success message. */
 export function ActionForm({
   action, children, className,
 }: {

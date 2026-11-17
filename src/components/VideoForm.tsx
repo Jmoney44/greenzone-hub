@@ -1,8 +1,9 @@
-"use client";
 
 import { useState } from "react";
+import { useNavigate } from "react-router";
 import { ActionForm, Submit } from "./Form";
-import { saveVideo } from "@/app/actions/admin";
+import { saveVideo } from "@/lib/actions";
+import { TYPES, uploadTicket } from "@/lib/upload";
 
 type Option = { id: string; name: string };
 type Video = {
@@ -11,6 +12,12 @@ type Video = {
 };
 
 export function VideoForm({ video, topics, courses, defaultHub }: { video?: Video; topics: Option[]; courses: Option[]; defaultHub: string }) {
+  const navigate = useNavigate();
+  const save = async (_: unknown, form: FormData) => {
+    const r = await saveVideo(form);
+    if (r.hub) navigate(`/admin/videos?hub=${r.hub}`);
+    return r.error ? { error: r.error } : undefined;
+  };
   const [hub, setHub] = useState(video?.hub ?? defaultHub);
   const [type, setType] = useState(video?.sourceType ?? "FILE");
   const [source, setSource] = useState(video?.source ?? "");
@@ -26,11 +33,10 @@ export function VideoForm({ video, topics, courses, defaultHub }: { video?: Vide
     setSource("");
     setUpload({ percent: 0, name: file.name });
     const fail = (error: string) => setUpload({ percent: 0, name: file.name, error });
-    // 1. Ask the site for a one-time upload address.
+    // 1. Get a one-time upload address from video storage.
     let ticket: { file?: string; url?: string; type?: string; error?: string } = {};
     try {
-      const res = await fetch("/api/admin/upload", { method: "POST", headers: { "x-filename": encodeURIComponent(file.name) } });
-      ticket = await res.json();
+      ticket = await uploadTicket(file.name);
     } catch {}
     if (!ticket.file || !ticket.url) return fail(ticket.error ?? "The upload could not start. Please try again.");
     // 2. Send the file straight to video storage.
@@ -52,7 +58,7 @@ export function VideoForm({ video, topics, courses, defaultHub }: { video?: Vide
   const tab = (on: boolean) => `tab ${on ? "tab-on" : ""}`;
 
   return (
-    <ActionForm action={saveVideo} className="card flex max-w-[820px] flex-col gap-6 p-6 md:p-8">
+    <ActionForm action={save} className="card flex max-w-[820px] flex-col gap-6 p-6 md:p-8">
       {video && <input type="hidden" name="id" value={video.id} />}
       <input type="hidden" name="hub" value={hub} />
       <input type="hidden" name="sourceType" value={type} />
@@ -110,7 +116,7 @@ export function VideoForm({ video, topics, courses, defaultHub }: { video?: Vide
         {type === "FILE" && (
           <div className="flex flex-col gap-2">
             <label htmlFor="file" className="sr-only">Video file</label>
-            <input id="file" type="file" accept="video/mp4,video/webm,video/quicktime,.mp4,.m4v,.webm,.mov"
+            <input id="file" type="file" accept={Object.values(TYPES).join(",") + "," + Object.keys(TYPES).join(",")}
               onChange={(e) => e.target.files?.[0] && send(e.target.files[0])}
               className="field py-3 file:mr-4 file:rounded-full file:border-0 file:bg-tint file:px-4 file:py-1.5 file:font-bold file:text-deep" />
             {upload && !upload.error && (

@@ -18,7 +18,6 @@ export function Thumb({
   return (
     <div className={`relative flex aspect-video items-center justify-center overflow-hidden ${tints[index % tints.length]}`}>
       {yt && (
-        // eslint-disable-next-line @next/next/no-img-element
         <img src={`https://i.ytimg.com/vi/${yt}/hqdefault.jpg`} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />
       )}
       <span className="relative flex size-13 items-center justify-center rounded-full bg-white text-deep shadow-lg transition group-hover:scale-110"><Play /></span>
